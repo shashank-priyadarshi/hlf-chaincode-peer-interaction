@@ -1,0 +1,80 @@
+// Copyright the Hyperledger Fabric contributors. All rights reserved.
+//
+// SPDX-License-Identifier: Apache-2.0
+
+syntax = "proto3";
+
+option java_package = "org.hyperledger.fabric.protos.peer";
+option go_package = "github.com/hyperledger/fabric-protos-go/peer";
+
+package protos;
+
+// import "proposal.proto";
+// import "proposal_response.proto";
+import "google/protobuf/timestamp.proto";
+
+//ChaincodeEvent is used for events and registrations that are specific to chaincode
+//string type - "chaincode"
+message ChaincodeEvent {
+    string chaincode_id = 1;
+    string tx_id = 2;
+    string event_name = 3;
+    bytes payload = 4;
+}
+message SignedProposal{
+    string p1 = 1;
+};
+message ProposalResponse{
+    string r1 = 1;
+};
+service Endorser {
+    rpc ProcessProposal(SignedProposal) returns (ProposalResponse);
+}
+
+message ChaincodeMessage {
+    enum Type {
+        UNDEFINED = 0;
+        REGISTER = 1;
+        REGISTERED = 2;
+        INIT = 3;
+        READY = 4;
+        TRANSACTION = 5;
+        COMPLETED = 6;
+        ERROR = 7;
+        GET_STATE = 8;
+        PUT_STATE = 9;
+        DEL_STATE = 10;
+        INVOKE_CHAINCODE = 11;
+        RESPONSE = 13;
+        GET_STATE_BY_RANGE = 14;
+        GET_QUERY_RESULT = 15;
+        QUERY_STATE_NEXT = 16;
+        QUERY_STATE_CLOSE = 17;
+        KEEPALIVE = 18;
+        GET_HISTORY_FOR_KEY = 19;
+        GET_STATE_METADATA = 20;
+        PUT_STATE_METADATA = 21;
+        GET_PRIVATE_DATA_HASH = 22;
+        PURGE_PRIVATE_DATA = 23;
+    }
+
+    Type type = 1;
+    google.protobuf.Timestamp timestamp = 2;
+    bytes payload = 3;
+    string txid = 4;
+
+    SignedProposal proposal = 5;
+
+    //event emitted by chaincode. Used only with Init or Invoke.
+    // This event is then stored (currently)
+    //with Block.NonHashData.TransactionResult
+    ChaincodeEvent chaincode_event = 6;
+
+    //channel id
+    string channel_id = 7;
+}
+// Interface that provides support to chaincode execution. ChaincodeContext
+// provides the context necessary for the server to respond appropriately.
+service ChaincodeSupport {
+    rpc Register(stream ChaincodeMessage) returns (stream ChaincodeMessage);
+}
