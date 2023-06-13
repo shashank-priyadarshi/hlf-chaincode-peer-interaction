@@ -24,12 +24,6 @@ message ChaincodeEvent {
 message SignedProposal{
     string p1 = 1;
 };
-message ProposalResponse{
-    string r1 = 1;
-};
-service Endorser {
-    rpc ProcessProposal(SignedProposal) returns (ProposalResponse);
-}
 
 message ChaincodeMessage {
     enum Type {

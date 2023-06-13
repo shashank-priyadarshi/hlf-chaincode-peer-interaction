@@ -11,6 +11,7 @@ package main
 // chaincode is able to connect and register itself with peer
 
 import (
+	"encoding/json"
 	"fmt"
 	"net"
 
@@ -18,6 +19,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 type ChaincodeSupport struct {
@@ -45,18 +47,49 @@ func main() {
 func (cs *ChaincodeSupport) Register(x pb.ChaincodeSupport_RegisterServer) error {
 	fmt.Println("hihi hahaha hahaha")
 
-	for i := 0; i < 10; i++ {
-		if msg, err := x.Recv(); msg != nil {
+	for {
+		msg, err := x.Recv()
+		switch msg.Type {
+		case pb.ChaincodeMessage_REGISTER:
 			fmt.Println("received message from chaincode: ")
 			fmt.Println(msg, err)
 			x.Send(&pb.ChaincodeMessage{
 				Type: pb.ChaincodeMessage_REGISTERED,
 			})
-		} else {
-			fmt.Println("received message from chaincode: ")
+			fmt.Println("sent message to chaincode: ")
 			fmt.Println(msg, err)
 			x.Send(&pb.ChaincodeMessage{
-				Type: pb.ChaincodeMessage_COMPLETED,
+				Type: pb.ChaincodeMessage_READY,
+			})
+			fmt.Println("sent message to chaincode: ")
+			fmt.Println(msg, err)
+			x.Send(&pb.ChaincodeMessage{
+				Type: pb.ChaincodeMessage_INIT,
+			})
+		default:
+			fmt.Println("received message from chaincode: ")
+			fmt.Println(msg, err)
+			dummy, _ := json.Marshal(struct {
+				Args        [][]byte          `protobuf:"bytes,1,rep,name=args,proto3" json:"args,omitempty"`
+				Decorations map[string][]byte `protobuf:"bytes,2,rep,name=decorations,proto3" json:"decorations,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+				// is_init is used for the application to signal that an invocation is to be routed
+				// to the legacy 'Init' function for compatibility with chaincodes which handled
+				// Init in the old way.  New applications should manage their initialized state
+				// themselves.
+				IsInit bool `protobuf:"varint,3,opt,name=is_init,json=isInit,proto3" json:"is_init,omitempty"`
+			}{
+				IsInit:      false,
+				Args:        [][]byte{[]byte("init"), []byte("a"), []byte("100"), []byte("b"), []byte("200")},
+				Decorations: map[string][]byte{"event": []byte("event")},
+			})
+			x.Send(&pb.ChaincodeMessage{
+				Type:           pb.ChaincodeMessage_TRANSACTION,
+				ChannelId:      "mychannel",
+				Txid:           "txid",
+				Payload:        dummy,
+				Proposal:       &pb.SignedProposal{},
+				ChaincodeEvent: &pb.ChaincodeEvent{},
+				Timestamp:      &timestamppb.Timestamp{},
 			})
 		}
 	}
