@@ -122,8 +122,6 @@ func chatWithPeer(chaincodename string, stream PeerChaincodeStream, cc Chaincode
 
 	receiveMessage := func() {
 		in, err := stream.Recv()
-		fmt.Println(in)
-		fmt.Println(err)
 		msgAvail <- &recvMsg{in, err}
 	}
 

@@ -9,21 +9,25 @@ option go_package = "github.com/hyperledger/fabric-protos-go/peer";
 
 package protos;
 
-// import "proposal.proto";
-// import "proposal_response.proto";
 import "google/protobuf/timestamp.proto";
 
-//ChaincodeEvent is used for events and registrations that are specific to chaincode
-//string type - "chaincode"
 message ChaincodeEvent {
     string chaincode_id = 1;
     string tx_id = 2;
     string event_name = 3;
     bytes payload = 4;
 }
-message SignedProposal{
-    string p1 = 1;
-};
+
+message SignedProposal {
+    bytes proposal_bytes = 1;
+    bytes signature = 2;
+}
+
+message Proposal {
+    bytes header = 1;
+    bytes payload = 2;
+    bytes extension = 3;
+}
 
 message ChaincodeMessage {
     enum Type {
@@ -57,18 +61,19 @@ message ChaincodeMessage {
     bytes payload = 3;
     string txid = 4;
 
-    SignedProposal proposal = 5;
+    bytes proposal = 5;
 
-    //event emitted by chaincode. Used only with Init or Invoke.
-    // This event is then stored (currently)
-    //with Block.NonHashData.TransactionResult
     ChaincodeEvent chaincode_event = 6;
 
-    //channel id
     string channel_id = 7;
 }
-// Interface that provides support to chaincode execution. ChaincodeContext
-// provides the context necessary for the server to respond appropriately.
+
+message ChaincodeInput {
+    repeated bytes args  = 1;
+    map<string, bytes> decorations = 2;
+    bool is_init = 3;
+}
+
 service ChaincodeSupport {
     rpc Register(stream ChaincodeMessage) returns (stream ChaincodeMessage);
 }
