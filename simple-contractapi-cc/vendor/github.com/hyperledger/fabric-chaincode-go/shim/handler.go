@@ -64,8 +64,6 @@ func shorttxid(txid string) string {
 
 // serialSend serializes calls to Send on the gRPC client.
 func (h *Handler) serialSend(msg *pb.ChaincodeMessage) error {
-	msg.Txid = "something-something"
-	msg.ChannelId = "hello-hunny-bunny"
 	h.serialLock.Lock()
 	defer h.serialLock.Unlock()
 
