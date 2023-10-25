@@ -37,7 +37,6 @@ var streamGetter peerStreamGetter
 
 // the non-mock user CC stream establishment func
 func userChaincodeStreamGetter(name string) (ClientStream, error) {
-	*peerAddress = "localhost:7051"
 	if *peerAddress == "" {
 		return nil, errors.New("flag 'peer.address' must be set")
 	}
@@ -96,11 +95,7 @@ func chatWithPeer(chaincodename string, stream PeerChaincodeStream, cc Chaincode
 	handler := newChaincodeHandler(stream, cc)
 
 	// Send the ChaincodeID during register.
-	chaincodeID := &peerpb.ChaincodeID{
-		Name:    chaincodename,
-		Path:    "$HOME/Code/simple-contractapi-cc",
-		Version: "1.0",
-	}
+	chaincodeID := &peerpb.ChaincodeID{Name: chaincodename}
 	payload, err := proto.Marshal(chaincodeID)
 	if err != nil {
 		return fmt.Errorf("error marshalling chaincodeID during chaincode registration: %s", err)
